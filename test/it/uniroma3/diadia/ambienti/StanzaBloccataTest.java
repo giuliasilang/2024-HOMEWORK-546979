@@ -11,7 +11,6 @@ public class StanzaBloccataTest {
 	
 	private StanzaBloccata blocked;
 	private Stanza stanza;
-	private Stanza adiacente;
 	private Attrezzo attrezzoSblocca;
 	
 	
