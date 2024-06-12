@@ -1,125 +1,135 @@
 package it.uniroma3.diadia.giocatore;
-
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
+import it.uniroma3.diadia.Configuratore;
 import it.uniroma3.diadia.attrezzi.Attrezzo;
+import it.uniroma3.diadia.attrezzi.ComparatoreAttrezziPerPeso;
 
-public class Borsa{
-
-	public final static int DEFAULT_PESO_MAX_BORSA = 10; 
-	//private Attrezzo[] attrezzi;
-	private Map<String, Attrezzo> attrezzi;
+public class Borsa {
+	
+	public final static int DEFAULT_PESO_MAX_BORSA = Configuratore.getPesoMax();
+	//public final static int DEFAULT_PESO_MAX_BORSA = 10;
+	private Map<String, Attrezzo> nome2attrezzi;
+	private int numeroAttrezzi;
 	private int pesoMax;
 	private int pesoAttuale;
+	
 	public Borsa() {
-		this(DEFAULT_PESO_MAX_BORSA); 
+		this(DEFAULT_PESO_MAX_BORSA);
 	}
-
 	public Borsa(int pesoMax) {
 		this.pesoMax = pesoMax;
-		this.attrezzi = new HashMap<>(); // speriamo bastino...
+		//this.attrezzi = new Attrezzo[10]; // speriamo che bastino...
+		this.nome2attrezzi = new TreeMap<>();
+		this.numeroAttrezzi = 0;
 		this.pesoAttuale = 0;
 	}
-
 	public boolean addAttrezzo(Attrezzo attrezzo) {
 		if (this.getPeso() + attrezzo.getPeso() > this.getPesoMax())
 			return false;
-		//this.attrezzi[this.numeroAttrezzi] = attrezzo;
-		Attrezzo vecchio = this.attrezzi.put(attrezzo.getNome(), attrezzo);
-		if(vecchio!=null) this.pesoAttuale -= vecchio.getPeso();
+		this.nome2attrezzi.put(attrezzo.getNome(),attrezzo);
+		this.numeroAttrezzi++;
 		this.pesoAttuale += attrezzo.getPeso();
 		return true;
 	}
-
+	
 	public int getPesoMax() {
 		return pesoMax;
 	}
 
-//	public Attrezzo getAttrezzo(String nomeAttrezzo) {
-//		Attrezzo a = null;
-//		for (int i= 0; i<this.numeroAttrezzi; i++)
-//			if (this.attrezzi[i].getNome().equals(nomeAttrezzo)) a = attrezzi[i];
-//		return a; 
-//	}
-	
 	public Attrezzo getAttrezzo(String nomeAttrezzo) {
-		return this.attrezzi.get(nomeAttrezzo);
+		Attrezzo a = null;
+		if(nomeAttrezzo != null && this.nome2attrezzi.containsKey(nomeAttrezzo))
+			a = this.nome2attrezzi.get(nomeAttrezzo);
+		return a;
 	}
 
-	public int getPeso() { // peso della borsa
-//		for (String chiave: this.attrezzi.keySet())
-//			peso += this.attrezzi.get(chiave).getPeso();
+	public int getPeso() {
 		return this.pesoAttuale;
 	}
 
+	public boolean getPesoRimanente(Attrezzo a) {
+		if(a != null && this.getPesoMax()-this.getPeso()>=a.getPeso())
+			return true;
+		return false; 
+	}
+
 	public boolean isEmpty() {
-		//return this.numeroAttrezzi == 0;
-		return this.attrezzi.isEmpty();
-
+		return this.numeroAttrezzi == 0;
 	}
-
 	public boolean hasAttrezzo(String nomeAttrezzo) {
-		return this.attrezzi.containsKey(nomeAttrezzo);
+		return this.getAttrezzo(nomeAttrezzo)!=null;
 	}
-
 	public Attrezzo removeAttrezzo(String nomeAttrezzo) {
-		if(this.hasAttrezzo(nomeAttrezzo)) {
-			this.pesoAttuale -= this.getAttrezzo(nomeAttrezzo).getPeso();
-			return this.attrezzi.remove(nomeAttrezzo);
+		Attrezzo a = null;
+		if(nomeAttrezzo!=null){
+			a = nome2attrezzi.remove(nomeAttrezzo);
 		}
-		return null;
+		return a;
 	}
-
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		if (!this.isEmpty()) {
 			s.append("Contenuto borsa ("+this.getPeso()+"kg/"+this.getPesoMax()+"kg): ");
-			//s.append(this.attrezzi.values().toString());
+			s.append("\n");
+			s.append(this.getContenutoOrdinatoPerNome().toString());
+			s.append("\n");
+			s.append(this.getContenutoRaggruppatoPerPeso().toString());
+			s.append("\n");
+			s.append(this.getSortedSetOrdinatoPerPeso().toString());
 		}
-		else 
+		else
 			s.append("Borsa vuota");
 		return s.toString();
 	}
-	
-	public List<Attrezzo> getContenutoOrdinatoPerPeso(){
-		final List<Attrezzo> daOrdinare = new ArrayList<>();
-		daOrdinare.addAll(this.attrezzi.values());
-		daOrdinare.sort(new ComparatoreAttrezziPerPeso());
-		return daOrdinare;
+
+	SortedSet<Attrezzo> getSortedSetOrdinatoPerPeso(){
+		SortedSet<Attrezzo> s = new TreeSet<Attrezzo>(new ComparatoreAttrezziPerPeso());
+		s.addAll(this.nome2attrezzi.values());
+		return s;
 	}
+//	List<Attrezzo> getContenutoOrdinatoPerPesoCompareTo(){
+//		Set<Attrezzo> s = new TreeSet<>();
+//		s.addAll(this.nome2attrezzi.values());
+//		List<Attrezzo> l = new ArrayList<>();
+//		
+//		l.addAll(s);
+//		return l;
+//	}
 	
-	public SortedSet<Attrezzo> getContenutoOrdinatoPerNome(){
-		SortedSet<Attrezzo> ordinata = new TreeSet<>(this.attrezzi.values());
-		return ordinata;
+	List<Attrezzo> getContenutoOrdinatoPerPeso(){
+		List<Attrezzo> l = new ArrayList<>();
+		l.addAll(this.nome2attrezzi.values());
+		Collections.sort(l, new ComparatoreAttrezziPerPeso());
+		return l;
 	}
-	
-	public Map<Integer, Set<Attrezzo>> getContenutoRaggruppatoPerPeso(){
-		final Map<Integer, Set<Attrezzo>> peso2attrezzi = new HashMap<Integer, Set<Attrezzo>>();
-		for(Attrezzo a: this.attrezzi.values()) {
-			if(peso2attrezzi.containsKey(a.getPeso())) {
-				peso2attrezzi.get(a.getPeso()).add(a);
+
+	SortedSet<Attrezzo> getContenutoOrdinatoPerNome(){
+		return new TreeSet<Attrezzo>(this.nome2attrezzi.values());
+	}
+
+	Map<Integer,Set<Attrezzo>> getContenutoRaggruppatoPerPeso(){
+		Map<Integer, Set<Attrezzo>> a2p = new TreeMap<>();
+		//il for e' stato inserito successivamente all'esercizio 2 (nell'esercizio 3)
+		for(Attrezzo a : this.nome2attrezzi.values()){
+			if(a2p.containsKey(a.getPeso())) {
+				a2p.get(a.getPeso()).add(a);
 			}
 			else {
-				Set<Attrezzo> altroSet = new HashSet<>();
-				altroSet.add(a);
-				peso2attrezzi.put(a.getPeso(), altroSet);
+				Set<Attrezzo>  s =new HashSet<Attrezzo>();
+				s.add(a);
+				a2p.put(a.getPeso(), s);
 			}
 		}
-		return peso2attrezzi;
+		return a2p;
 	}
-	
-	public SortedSet<Attrezzo> getSordetSetOrdinatoPerPeso(){
-		SortedSet<Attrezzo> daOrdinare = new TreeSet<>(new ComparatoreAttrezziPerPeso());
-		daOrdinare.addAll(this.attrezzi.values());
-		return daOrdinare;
-	}
-	
-	
+
 }

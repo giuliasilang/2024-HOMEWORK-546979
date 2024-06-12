@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
 import java.io.StringReader;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
